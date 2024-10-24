@@ -158,7 +158,7 @@ resource "aws_eip" "static_eip" {
 # Create A record for ec2-docker.everyoneget.click
 resource "aws_route53_record" "ec2_docker_record" {
   zone_id = "Z0770151337G7J04A4517"   # Replace with your Route 53 hosted zone ID
-  name    = "ec2-docker.everyoneget.click"
+  name    = "ec2-docker.1.everyoneget.click"
   type    = "A"
   ttl     = 300
   records = [aws_eip.static_eip.public_ip]  # Use the static Elastic IP
@@ -167,7 +167,7 @@ resource "aws_route53_record" "ec2_docker_record" {
 # Create A record for ec2-instance.everyoneget.click
 resource "aws_route53_record" "ec2_instance_record" {
   zone_id = "Z0770151337G7J04A4517"   # Replace with your Route 53 hosted zone ID
-  name    = "ec2-instance.everyoneget.click"
+  name    = "ec2-instance.1.everyoneget.click"
   type    = "A"
   ttl     = 300
   records = [aws_eip.static_eip.public_ip]  # Use the static Elastic IP
@@ -188,7 +188,7 @@ resource "aws_instance" "ec2_instance" {
 
   # User data for installing Docker, NGINX, and configuring them
   # User data for installing Docker, NGINX, and configuring them
- user_data = <<-EOF
+user_data = <<-EOF
               #!/bin/bash
              
               sudo yum update -y
@@ -212,17 +212,17 @@ resource "aws_instance" "ec2_instance" {
               sudo bash -c 'cat <<EOF_NGINX > /etc/nginx/conf.d/my_sites.conf
                  server {
                      listen 80;
-                     server_name ec2-instance.everyoneget.click;
+                     server_name ec2-instance.1.everyoneget.click;
 
                      location / {
                          return 200 "Hello from Instance";
                          add_header Content-Type text/plain;
-                     }  # Closing brace for the first location block
-                 }  # Closing brace for the first server block
+                     }  
+                 }  
 
                  server {
                      listen 80;
-                     server_name ec2-docker.everyoneget.click;
+                     server_name ec2-docker.1.everyoneget.click;
 
                      location / {
                          proxy_pass http://localhost:8080;  # Forward requests to the Docker container
@@ -230,8 +230,8 @@ resource "aws_instance" "ec2_instance" {
                          proxy_set_header X-Real-IP \$remote_addr;
                          proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
                          proxy_set_header X-Forwarded-Proto \$scheme;
-                     }  # Closing brace for the second location block
-                 }  # Closing brace for the second server block
+                     }  
+                 }  
               EOF_NGINX'
 
               # Install EPEL repository for Certbot
@@ -241,13 +241,13 @@ resource "aws_instance" "ec2_instance" {
               sudo yum install -y certbot-nginx
 
               # Obtain SSL certificates
-              sudo certbot --nginx -d ec2-instance.everyoneget.click -d ec2-docker.everyoneget.click --non-interactive --agree-tos --email drdinaokasha@gmail.com
+              sudo certbot --nginx -d ec2-instance.1.everyoneget.click -d ec2-docker.1.everyoneget.click --non-interactive --agree-tos --email drdinaokasha@gmail.com
 
               # Redirect HTTP to HTTPS
               sudo bash -c 'cat <<EOF_REDIRECT >> /etc/nginx/conf.d/my_sites.conf
                  server {
                      listen 80;
-                     server_name ec2-instance.everyoneget.click ec2-docker.everyoneget.click;
+                     server_name ec2-instance.1.everyoneget.click ec2-docker.1.everyoneget.click;
                      return 301 https://\$host\$request_uri;
                  }
               EOF_REDIRECT'
@@ -266,3 +266,4 @@ resource "aws_eip_association" "eip_assoc" {
   instance_id   = aws_instance.ec2_instance.id
   allocation_id = aws_eip.static_eip.id
 }
+
